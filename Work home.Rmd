@@ -22,40 +22,85 @@ summary(cars)
 install.packages("haven")
 install.packages("DBI")
 install.packages("RSQLite")
+install.packages("readr")
 
 
 library(haven)              #this reads statistical package files like (SPSS, Stata, SAS)
-library(DBI)               #and this is for the databases
-library(RSQLite)           #this is the translator for SQLite databases
+library(DBI)               #and this is for the database
+library(RSQLite)          #this is the translator for SQLite databases to make R understand it
+library(readr)  
 
 dir.create("data")
+
 students <- data.frame(
 student_id = 1:15,
 name = c("Alice","Brian","Claire","David","Emma","Felix","Grace","Henry",
               "Irene","James","Karen","Leo","Mary","Nathan","Olivia"),
 gender = c("F","M","F","M","F","M","F","M","F","M","F","M","F","M","F"),
 class = c("A","A","B","B","A","C","C","A","B","C","A","B","C","B","A"),
-maths = c(78,65,92,45,81,59,74,88,67,53,95,70,82,38,76),
+math = c(78,65,92,45,81,59,74,88,67,53,95,70,82,38,76),
 english = c(85,58,88,52,79,63,90,76,71,49,93,66,87,44,81), 
-science = 
-
+science = c(72,70,95,48,84,55,68,91,62,58,97,73,80,41,79)
 )
 
+head(students)
+tail(students)
 
+write.csv(students, "data/student_marks.csv", row.names = FALSE)   #am saving my csv sheet from R
 
+write_sav(students, "data/student_marks.sav") #and here am saving my spss data from R too
 
+write_dta(students, "data/student_marks.dta")  #That's for stata if u want to use it in stata
 
+con <- dbConnect(RSQLite::SQLite(), "data/school.sqlite")
 
+if (dbExistsTable(con, "student_marks")) {
+  dbExecute(con, "ALTER TABLE student_marks RENAME TO student_marks_old")
+  }          #if the table exists I rename it instead of dropping it
 
+dbExecute(con, "
+  CREATE TABLE student_marks (
+    student_id INTEGER PRIMARY KEY,
+    name       TEXT,
+    gender     TEXT,
+    class      TEXT,
+    math       INTEGER,
+    english    INTEGER,
+    science    INTEGER
+  )
+")
 
+dbAppendTable(con, "student_marks", students)
+dbDisconnect(con)
 
+(spss_data <- read_sav("data/student_marks.sav")) 
+head(spss_data <- read_sav("data/student_marks.sav"))
+str(spss_data)
 
+(stata_data <- read_dta("data/student_marks.dta"))
+str(stata_data)
 
+con <- dbConnect(RSQLite::SQLite(), "data/school.sqlite")
 
+dbListTables(con)                    
+dbListFields(con, "student_marks") 
 
+db_data <- dbReadTable(con, "student_marks")
 
+(top_students <- dbGetQuery(con, "
+  SELECT name, class, math
+  FROM student_marks
+  WHERE math > 80
+  ORDER BY math DESC
+"))
 
+head(db_data)
+dbDisconnect(con)
 
+(csv_data <- read.csv("data/student_marks.csv"))
+nrow(spss_data)
+nrow(stata_data)
+nrow(csv_data)
 
 
 
