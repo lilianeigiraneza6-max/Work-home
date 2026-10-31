@@ -46,7 +46,7 @@ plot(x_variable, y_variable,
      main = "Scatter Plot")
 
 
-iris
+View(iris)
 (boxplot(iris$Sepal.Length~iris$Species,data=iris, main="Title"))
 
 
@@ -54,7 +54,10 @@ UCBAdmissions
 (ucba <- data.frame(UCBAdmissions))
 (cross<-xtabs(Freq~Gender+Admit, data=ucba))
 (cross<-xtabs(Freq~Gender+Admit, data=ucba[ucba$Dept=="C",]))
+View(ucba)
 
-
+ggplot(data = ucba, aes(x = Dept, y = Freq)) +
+  geom_boxplot(fill = "lightblue") +
+  geom_jitter(width = 0.2, color = "darkblue")
 
 
