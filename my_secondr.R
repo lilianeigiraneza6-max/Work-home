@@ -22,8 +22,6 @@ help("par")
 install.packages("dplyr")
 library(dplyr)
 
-install.packages("dplyr")  # Run only once
-library(dplyr)             # Run every new session
 
 birds <- data.frame(
   bird_sp = c("sparrow","kingfisher","eagle","hummingbird",
