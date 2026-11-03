@@ -1,0 +1,285 @@
+---
+title: "IGIRANEZA Liliane"
+author: "Liliane"
+date: "2026-11-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+#Dealing with my Population data by checking their rows,columns,names of the columns i have,head and structure
+install.packages("ggplot2")
+install.packages("tidyverse")
+library(tidyverse)
+library(tidyr)
+library("ggplot2")
+
+
+
+list.files("Data")
+
+(population <- read.csv("D:/AUCA/CO2_MTProject/Data/world_population.csv"))
+(co2        <- read.csv("D:/AUCA/CO2_MTProject/Data/CO2_emission.csv"))
+(countries  <- read.csv("D:/AUCA/CO2_MTProject/Data/countries-table-selected-columns second.csv"))
+
+dim(population)     
+names(population)  
+head(population, 5)
+tail(population, 10)
+str(population)
+nrow(population)
+ncol(population)
+
+#Then am going to check where I have duplicates rows and how much are they then drop the duplicates if any and check again the new shape
+
+(sum(duplicated(population)))
+(population <- population[!duplicated(population), ])
+dim(population)
+str(population)
+#Checking missing values&dealing with them and see if we have some outliers by using boxplot in the quantitative variables and count them plus dealing with them by using Winsorization/capping process.
+
+colSums(is.na(population))
+par(mfrow = c(2, 3))     
+
+boxplot(population$X2022.Population, main = "2022 Population")
+boxplot(population$Area..km..,       main = "Area (km2)")
+boxplot(population$Density..per.km.., main = "Density")
+boxplot(population$Growth.Rate,      main = "Growth Rate")
+boxplot(population$World.Population.Percentage, main = "World Pop. %")
+
+par(mfrow = c(1, 1))
+
+population$Growth.Rate<-as.numeric(population$Growth.Rate)
+population$X2022.Population<-as.numeric(population$X2022.Population)
+length(boxplot.stats(population$Growth.Rate)$out)
+length(boxplot.stats(population$X2022.Population)$out)
+
+#q holds the 25% and 75% points; iqr is the distance between them.
+#lower and upper are the “normal range” limits that box plots use.
+#pmax lifts values below lower up to it, and pmin brings values above upper down to it.
+
+q     <- quantile(population$Growth.Rate, c(0.25, 0.75), na.rm = TRUE)
+iqr   <- q[2] - q[1]
+lower <- q[1] - 1.5 * iqr
+upper <- q[2] + 1.5 * iqr
+
+(population$Growth.Rate.capped <- pmin(pmax(population$Growth.Rate, lower), upper))
+
+boxplot(population$Growth.Rate, population$Growth.Rate.capped, names= c("original","capped"), main = "Comparing the two columns")
+
+#Let's see the growth rate r, time period t, the projection Nt=p*e^(r*t) and round them to the whole people
+
+(population$r <- population$Growth.Rate-1)
+(t <- 2030-2022)
+(population$Pop2030 <- population$X2022.Population * exp(population$r*t))
+(population$Pop2030 <- round(population$Pop2030))
+head(population[, c("Country.Territory", "X2022.Population", "r", "Pop2030")], 10)
+sum(is.na(population$Pop2030))
+summary(population$Pop2030)
+
+#Let's see which country changes most with the biggest increase & decrease
+
+(population$Change <- population$Pop2030 - population$X2022.Population)
+head(population[order(-population$Change),c("Country.Territory","Change")], 5)
+head(population[order(population$Change),c("Country.Territory","Change")], 5)
+
+# Top ten countries with high population number and their performance during 2022
+
+install.packages("ggplot2")
+library(ggplot2)
+
+(top10 <- head(population[order(-population$X2022.Population), ], 10))
+top10[, c("Country.Territory","X2022.Population")]
+
+ggplot(top10, aes(x=reorder(Country.Territory, X2022.Population), y=X2022.Population/1e6)) + geom_col(fill="steelblue") + coord_flip() + labs(title= "Top 10 most populous countries, 2022", x="country", y="population(millions)")
+ggsave("plot_top10_2022.png", width = 7, height = 5)
+
+# Reshape from wide to long using built-in Base R
+(trend <- reshape(top10, 
+                 varying = c("X1990.Population", "X2000.Population", 
+                             "X2010.Population", "X2015.Population", 
+                             "X2020.Population", "X2022.Population"),
+                 v.names = "Population",
+                 timevar = "Year",
+                 times = c(1990, 2000, 2010, 2015, 2020, 2022),
+                 direction = "long"))
+
+ggplot2::ggplot(trend, ggplot2::aes(x = Year, y = Population / 1e6, color = Country.Territory)) +
+  ggplot2::geom_line(size = 1.2) +
+  ggplot2::geom_point(size = 2) +
+  ggplot2::labs(title = "Population Trends for Top 10 Countries (1990–2022)",
+       x = "Year",
+       y = "Population (Millions)",
+       color = "Country") +
+  ggplot2::theme_minimal()
+
+nrow(trend)                                  
+head(trend[, c("Country.Territory", "Year", "Population")], 12)
+ggplot2::ggsave("plot_trend_top10.png", width = 8, height = 5)
+
+#Extracting the 10 countries from the CO2 table
+
+(co2_top10 <- co2[co2$country_code %in% top10$CCA3, ])
+nrow(co2_top10)                                  
+co2_top10[, c("Country.Name", "country_code")]   
+rowSums(is.na(co2_top10[, paste0("X", 1990:2019)]))
+co2_long <- reshape(co2_top10,
+                    direction = "long",
+                    varying   = paste0("X", 1990:2019),
+                    v.names   = "CO2",
+                    timevar   = "Year",
+                    times     = 1990:2019,
+                    idvar     = "country_code")
+
+nrow(co2_long)   
+summary(co2)
+
+ggplot2::ggplot(co2_long, ggplot2::aes(x = Year, y = CO2, color = Country.Name)) +
+  ggplot2::geom_line(linewidth = 1) +
+  ggplot2::labs(title = "CO2 emissions of the top 10 most populous countries, 1990-2019",
+       x = "Year",
+       y = "CO2 emissions (metric tons per capita)",
+       color = "Country") + ggplot2::theme_minimal() 
+
+ggplot2::ggsave("plot_co2_top10.png", width = 8, height = 5)
+
+#Correlation Analysis
+
+ (vars<-population[,c("Area..km..","Density..per.km..","Growth.Rate","World.Population.Percentage")])
+ (names(vars)<-c("Area", "Density", "GrowthRate", "WorldPopPct"))
+ head(vars)
+
+(cor_matrix<-round(cor(vars), 2))
+
+library(ggplot2)
+
+(cor_long <- as.data.frame(as.table(cor_matrix)))
+(names(cor_long) <- c("Var1", "Var2", "Correlation"))
+
+ggplot(cor_long, aes(x = Var1, y = Var2, fill = Correlation)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = Correlation)) +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+                       midpoint = 0, limits = c(-1, 1)) +
+  labs(title = "Correlation heatmap of population variables",
+       x = "", y = "") +
+  theme_minimal()
+
+ggsave("plot_heatmap.png", width = 6, height = 5)
+ round(cor(vars,method="spearman"),2)
+head(population[order(-population$Density..per.km..),
+                c("Country.Territory", "Density..per.km..")], 5)
+                
+cor_sp <- round(cor(vars, method = "spearman"), 2)
+cor_sp_long <- as.data.frame(as.table(cor_sp))
+names(cor_sp_long) <- c("Var1", "Var2", "Correlation")
+
+ggplot(cor_sp_long, aes(x = Var1, y = Var2, fill = Correlation)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = Correlation)) +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+                       midpoint = 0, limits = c(-1, 1)) +
+  labs(title = "Spearman correlation heatmap", x = "", y = "") +
+  theme_minimal()
+
+ggsave("plot_heatmap_spearman.png", width = 6, height = 5)
+
+#Merging the Population and CO2 data
+sum(population$Country.Territory %in% co2$Country.Name)
+(pop2022 <- population[, c("CCA3", "Country.Territory", "Continent", "X2022.Population")])
+
+co2_2019 <- co2[, c("country_code", "Country.Name", "X2019")]
+(names(co2_2019) <- c("CCA3", "CO2_Name", "CO2_2019"))
+
+merged <- merge(pop2022, co2_2019, by = "CCA3")
+
+nrow(merged)
+head(merged)
+
+colSums(is.na(merged))               
+merged <- merged[!is.na(merged$CO2_2019), ]   
+nrow(merged)
+
+#DeterminING the pattern of relationships between population number and CO2 emissions.(Population in millions is more easier to read than pop in billions)
+
+library(ggplot2)
+merged$Pop_millions <- merged$X2022.Population / 1e6
+summary(merged[, c("Pop_millions", "CO2_2019")])
+
+ggplot(merged, aes(x = Pop_millions, y = CO2_2019)) +
+  geom_point(color = "steelblue") +
+  labs(title = "Population (2022) vs CO2 emissions per capita (2019)",
+       x = "Population (millions)",
+       y = "CO2 emissions (metric tons per capita)") +
+  theme_minimal()
+
+ggsave("plot_scatter.png", width = 7, height = 5)
+
+ggplot(merged, aes(x = Pop_millions, y = CO2_2019)) +
+  geom_point(color = "darkblue") +
+  scale_x_log10() +
+  geom_smooth(method = "lm", color = "red") +
+  labs(title = "Population (log scale) vs CO2 emissions per capita",
+       x = "Population (millions, log scale)",
+       y = "CO2 emissions (metric tons per capita)") +
+  theme_minimal()
+
+ggsave("plot_scatter_log.png", width = 7, height = 5)
+
+#Pearson, Spearman and Pearson on a log population
+cor(merged$Pop_millions, merged$CO2_2019)                        
+cor(merged$Pop_millions, merged$CO2_2019, method = "spearman")   
+cor(log10(merged$Pop_millions), merged$CO2_2019)                  
+
+#Simple regression
+
+model <- lm(CO2_2019 ~ log10(Pop_millions), data = merged)
+summary(model)
+cor.test(merged$Pop_millions, merged$CO2_2019, method = "spearman")
+#Our P-value shows that our results/relationship is not statistically significant since is greater than 0.05.
+
+merged$CO2_total_Mt <- merged$CO2_2019 * merged$Pop_millions   # million metric tons (approximate)
+
+cor(merged$Pop_millions, merged$CO2_total_Mt)
+
+#CO2 emissions by continent
+continent_co2 <- aggregate(CO2_2019 ~ Continent, data = merged, FUN = sum)
+(continent_co2 <- continent_co2[order(-continent_co2$CO2_2019), ])
+
+ggplot(continent_co2, aes(x = reorder(Continent, CO2_2019), y = CO2_2019)) +
+  geom_col(fill = "darkgreen") +
+  coord_flip() +
+  labs(title = "Sum of 2019 CO2 emissions by continent",
+       x = "Continent",
+       y = "Sum of CO2 emissions (metric tons per capita)") +
+  theme_minimal()
+
+ggsave("plot_continent.png", width = 7, height = 5)
+
+table(merged$Continent)
+aggregate(CO2_2019 ~ Continent, data = merged, FUN = mean)
+
+merged[which.min(merged$CO2_2019), c("Country.Territory", "CO2_2019")]  
+merged[which.max(merged$CO2_2019), c("Country.Territory", "CO2_2019")]  
+
+list.files(pattern = "plot_")
+
+#END
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

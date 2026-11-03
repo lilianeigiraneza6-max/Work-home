@@ -50,7 +50,7 @@ write.csv(students, "data/student_marks.csv", row.names = FALSE)   #am saving my
 
 write_sav(students, "data/student_marks.sav") #and here am saving my spss data from R too
 
-write_dta(students, "data/student_marks.dta")  #That's for stata if u want to use it in stata
+write_dta(students, "data/student_marks.dta")  #That's for stata if u want stata data
 
 con <- dbConnect(RSQLite::SQLite(), "data/school.sqlite")
 
@@ -101,9 +101,6 @@ dbDisconnect(con)
 nrow(spss_data)
 nrow(stata_data)
 nrow(csv_data)
-
-
-
 
 
 
