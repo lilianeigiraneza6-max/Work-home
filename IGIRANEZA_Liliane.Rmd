@@ -212,7 +212,7 @@ colSums(is.na(merged))
 merged <- merged[!is.na(merged$CO2_2019), ]   
 nrow(merged)
 
-#DeterminING the pattern of relationships between population number and CO2 emissions.(Population in millions is more easier to read than pop in billions)
+#Determining the pattern of relationships between population number and CO2 emissions.(Population in millions is more easier to read than pop in billions)
 
 library(ggplot2)
 merged$Pop_millions <- merged$X2022.Population / 1e6
@@ -254,7 +254,8 @@ merged$CO2_total_Mt <- merged$CO2_2019 * merged$Pop_millions   # million metric 
 
 cor(merged$Pop_millions, merged$CO2_total_Mt)
 
-#CO2 emissions by continent
+#CO2 emissions by continent  to and their total emission(metric tons per capita)
+
 continent_co2 <- aggregate(CO2_2019 ~ Continent, data = merged, FUN = sum)
 (continent_co2 <- continent_co2[order(-continent_co2$CO2_2019), ])
 
@@ -274,9 +275,15 @@ aggregate(CO2_2019 ~ Continent, data = merged, FUN = mean)
 merged[which.min(merged$CO2_2019), c("Country.Territory", "CO2_2019")]  
 merged[which.max(merged$CO2_2019), c("Country.Territory", "CO2_2019")]  
 
+continent_co2[3, ]
+continent_co2[nrow(continent_co2), ]
+
 list.files(pattern = "plot_")
 
+getwd()
 #END
+
+
 
 ```{r pressure, echo=FALSE}
 plot(pressure)

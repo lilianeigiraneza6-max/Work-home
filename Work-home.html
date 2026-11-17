@@ -417,6 +417,196 @@ student_marks WHERE math &gt; 80 ORDER BY math DESC “))</p>
 <p>head(db_data) dbDisconnect(con)</p>
 <p>(csv_data &lt;- read.csv(“data/student_marks.csv”)) nrow(spss_data)
 nrow(stata_data) nrow(csv_data)</p>
+<p>#If that table name exist we are goung to build a unique backup name
+using today’s date and time and rename it so that nothing lost</p>
+<p>con &lt;- dbConnect(RSQLite::SQLite(), “data/school.sqlite”) if
+(dbExistsTable(con, “student_marks”)) {</p>
+<p>backup_name &lt;- paste0(“student_marks_old_”, format(Sys.time(),
+“%Y%m%d_%H%M%S”)) dbExecute(con, paste0(“ALTER TABLE student_marks
+RENAME TO”, backup_name)) }</p>
+<p>dbDisconnect(con)</p>
+<p>#Using the geom functions</p>
+<p>library(ggplot2)</p>
+</div>
+<div id="geom_bar-counts-rows-in-each-category" class="section level1">
+<h1>geom_bar(): counts rows in each category</h1>
+<p>ggplot(students, aes(x = class)) + geom_bar(fill = “steelblue”) +
+labs(title = “Number of students per class”, x = “Class”, y =
+“Count”)</p>
+</div>
+<div id="geom_histogram-shows-how-one-numeric-variable-is-distributed" class="section level1">
+<h1>geom_histogram(): shows how one numeric variable is distributed</h1>
+<p>ggplot(students, aes(x = math)) + geom_histogram(binwidth = 10, fill
+= “orange”, color = “white”) + labs(title = “Distribution of math
+marks”, x = “Math mark”, y = “Number of students”)</p>
+</div>
+<div id="geom_boxplot-compares-a-number-across-groups" class="section level1">
+<h1>geom_boxplot(): compares a number across groups</h1>
+<p>ggplot(students, aes(x = class, y = math)) + geom_boxplot(fill =
+“lightgreen”) + labs(title = “Math marks by class”, x = “Class”, y =
+“Math mark”)</p>
+</div>
+<div id="geom_density-a-smooth-curve-showing-where-the-math-marks-are-concentrated" class="section level1">
+<h1>geom_density(): a smooth curve showing where the math marks are
+concentrated</h1>
+<p>ggplot(students, aes(x = math)) +<br />
+geom_density(fill = “skyblue”, alpha = 0.5) +<br />
+labs(title = “Density of math marks”, x = “Math mark”, y =
+“Density”)</p>
+</div>
+<div id="geom_rug-adds-a-small-tick-on-the-axis-for-every-student" class="section level1">
+<h1>geom_rug(): adds a small tick on the axis for every student</h1>
+<p>ggplot(students, aes(x = math)) + geom_density(fill = “skyblue”,
+alpha = 0.5) +<br />
+geom_rug(color = “darkblue”) +<br />
+labs(title = “Density of math marks with rug”, x = “Math mark”, y =
+“Density”)</p>
+</div>
+<div id="geom_violin-a-density-curve-turned-sideways-and-mirrored-one-per-class" class="section level1">
+<h1>geom_violin(): a density curve turned sideways and mirrored, one per
+class</h1>
+<p>ggplot(students, aes(x = class, y = math)) + geom_violin(fill =
+“plum”) +<br />
+labs(title = “Math marks by class (violin)”, x = “Class”, y = “Math
+mark”)</p>
+</div>
+<div id="geom_jitter-the-actual-points-shifted-slightly-so-they-dont-overlap" class="section level1">
+<h1>geom_jitter(): the actual points, shifted slightly so they don’t
+overlap</h1>
+<p>ggplot(students, aes(x = class, y = math)) + geom_boxplot(fill =
+“lightgreen”, outlier.shape = NA) + # box without extra outlier dots
+geom_jitter(width = 0.15, height = 0, color = “darkred”) + # one dot per
+student labs(title = “Math marks by class with individual students”, x =
+“Class”, y = “Math mark”)</p>
+</div>
+<div id="geom_point-geom_smooth-scatter-plot-with-a-trendline-comparing-math-vs-english" class="section level1">
+<h1>geom_point() &amp; geom_smooth(): Scatter plot with a trendline
+comparing math vs english</h1>
+<p>ggplot(students, aes(x = math, y = english)) + geom_point(color =
+“blue”, size = 3) + geom_smooth(method = “lm”, col = “red”, se = FALSE)
++ labs(title = “Math vs English Marks with Trendline”, x = “Math Mark”,
+y = “English Mark”)</p>
+</div>
+<div id="geom_line-line-plot-showing-math-marks-sequentially-by-student-id" class="section level1">
+<h1>geom_line(): Line plot showing math marks sequentially by student
+ID</h1>
+<p>ggplot(students, aes(x = student_id, y = math)) + geom_line(color =
+“maroon”, linewidth = 1) + geom_point(color = “purple”, size = 2) +
+labs(title = “Math Marks Progression Across Students”, x = “Student ID”,
+y = “Math Mark”)</p>
+</div>
+<div id="geom_text-scatter-plot-with-student-names-labeled-next-to-their-points" class="section level1">
+<h1>geom_text(): Scatter plot with student names labeled next to their
+points</h1>
+<p>ggplot(students, aes(x = math, y = science, label = name)) +
+geom_point(color = “darkgreen”) + geom_text(vjust = -0.5, size = 3) +
+labs(title = “Math vs Science Marks Labeled by Student Name”, x = “Math
+Mark”, y = “Science Mark”)</p>
+</div>
+<div id="geom_hline-geom_vline-adding-reference-lines-e.g.-passing-mark-of-50" class="section level1">
+<h1>geom_hline() &amp; geom_vline(): Adding reference lines (e.g.,
+passing mark of 50)</h1>
+<p>ggplot(students, aes(x = math, y = english)) + geom_point(color =
+“darkblue”, size = 3) + geom_hline(yintercept = 50, linetype = “dashed”,
+color = “red”) + geom_vline(xintercept = 50, linetype = “dashed”, color
+= “red”) + labs(title = “Marks with Passing Threshold Lines (50)”, x =
+“Math Mark”, y = “English Mark”)</p>
+<p>#FOR THE APPLY FUNCTIONS/FAMILY USAGE</p>
+</div>
+<div id="extract-just-the-numeric-score-columns-for-matrixapply-operations" class="section level1">
+<h1>Extract just the numeric score columns for matrix/apply
+operations</h1>
+<p>score_matrix &lt;- as.matrix(students[, c(“math”, “english”,
+“science”)]) score_df &lt;- students[, c(“math”, “english”,
+“science”)]</p>
+</div>
+<div id="apply-apply-a-function-across-margins-e.g.-find-mean-score-for-each-studentrow---margin-1" class="section level1">
+<h1>apply(): Apply a function across margins (e.g., find mean score for
+each student/row -&gt; margin 1)</h1>
+<p>(row_means &lt;- apply(score_matrix, 1, mean))</p>
+</div>
+<div id="lapply-apply-a-function-to-a-listdata-frame-always-returns-a-list" class="section level1">
+<h1>lapply(): Apply a function to a list/data frame, always returns a
+LIST</h1>
+<p>(lapply_res &lt;- lapply(score_df, mean))</p>
+</div>
+<div id="sapply-simplified-version-of-lapply-returns-a-vector-or-matrix-if-possible" class="section level1">
+<h1>sapply(): Simplified version of lapply, returns a VECTOR or matrix
+if possible</h1>
+<p>(sapply_res &lt;- sapply(score_df, mean))</p>
+</div>
+<div id="vapply-like-sapply-but-you-explicitly-specify-the-expected-return-type-for-safety" class="section level1">
+<h1>vapply(): Like sapply, but you explicitly specify the expected
+return type for safety</h1>
+<p>(vapply_res &lt;- vapply(score_df, mean, FUN.VALUE = numeric(1)))</p>
+</div>
+<div id="tapply-apply-a-function-across-subsets-defined-by-a-factor-e.g.-mean-math-score-by-class" class="section level1">
+<h1>tapply(): Apply a function across subsets defined by a factor (e.g.,
+mean math score BY class)</h1>
+<p>(tapply_res &lt;- tapply(students<span class="math inline">\(math,
+students\)</span>class, mean))</p>
+</div>
+<div id="mapply-multivariate-apply-e.g.-add-math-and-english-scores-element-by-element" class="section level1">
+<h1>mapply(): Multivariate apply (e.g., add math and english scores
+element-by-element)</h1>
+<p>(mapply_res &lt;- mapply(function(m, e) (m + e) / 2, students<span class="math inline">\(math, students\)</span>english))</p>
+</div>
+<div id="rapply-recursive-apply-for-nested-lists-we-can-wrap-score_df-into-a-list-to-demonstrate" class="section level1">
+<h1>rapply(): Recursive apply for nested lists (we can wrap score_df
+into a list to demonstrate)</h1>
+<p>nested_list &lt;- list(scores = score_df) rapply_res &lt;-
+rapply(nested_list, function(x) x + 2, classes = “numeric”)
+head(rapply_res)</p>
+<p>#The other question that asks to find a dataset which can fit
+multiple linear regression and it’s interpretation</p>
+</div>
+<div id="fit-the-multiple-linear-regression-model" class="section level1">
+<h1>Fit the multiple linear regression model</h1>
+<p>mlr_model &lt;- lm(science ~ math + english, data = students)</p>
+</div>
+<div id="view-the-regression-summary-and-coefficients" class="section level1">
+<h1>View the regression summary and coefficients</h1>
+<p>summary(mlr_model)</p>
+<p>#By Predicting a student’s science score based on their math and
+english scores. Our regression equation is equal to science =
+7.22+(1.36<em>math)-(0.45</em>english)</p>
+<p>#Math (+1.36, p &lt; 0.001):Strong Positive Impact: Holding English
+constant, for every 1-point increase in a student’s math mark, their
+science score increases by 1.36 points. #This relationship is highly
+statistically significant.English (-0.45, p = 0.002):Statistical
+Suppression Effect: Holding Math constant, a 1-point increase in English
+corresponds to a <span class="math inline">\(-0.45\)</span> point change
+in science. In this specific dataset, this negative coefficient arises
+because Math and English scores overlap heavily in explaining Science
+variance (multicollinearity). It is statistically significant (p =
+0.002). #Intercept (7.22, p = 0.065):Baseline Value: The theoretical
+starting science score if both Math and English were zero (serving as a
+mathematical anchor rather than a real-world student scenario</p>
+<p>#Multiple R-squared (0.9746):Exceptional Explanatory Power: 97.46% of
+the total variance in science scores is explained by the combination of
+math and english marks.</p>
+<p>#Adjusted R-squared (0.9704):Confirms that even after accounting for
+the number of predictors, the model remains robustly predictive
+(97.04%).</p>
+<p>#Overall F-statistic (p = 2.68* 10^(-10):Proves that the model as a
+whole is overwhelmingly significant compared to a model with no
+predictors.</p>
+<p>#THE LAST QUESTION ABOUT VARIABLE SELECTION METHODS</p>
+<p>#This is the process of choosing which predictor variables are we
+going to include in regression model to get the best balance between
+accuracy and simplicity whic avoids overfitting.</p>
+<p>#For instance:</p>
+</div>
+<div id="start-with-a-full-model-and-let-r-perform-stepwisebackward-elimination" class="section level1">
+<h1>Start with a full model and let R perform stepwise/backward
+elimination</h1>
+<p>full_model &lt;- lm(science ~ math + english, data = students)
+step_model &lt;- step(full_model, direction = “backward”)</p>
+</div>
+<div id="view-the-summary-of-the-optimized-model-selected" class="section level1">
+<h1>View the summary of the optimized model selected</h1>
+<p>summary(step_model)</p>
+<p>#END</p>
 <p><img role="img" src="data:image/png;base64,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" width="672" /></p>
 <p>Note that the <code>echo = FALSE</code> parameter was added to the
 code chunk to prevent printing of the R code that generated the

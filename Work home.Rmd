@@ -102,10 +102,153 @@ nrow(spss_data)
 nrow(stata_data)
 nrow(csv_data)
 
+#If that table name exist we are goung to build a unique backup name using today's date and time and rename it so that nothing lost
 
+con <- dbConnect(RSQLite::SQLite(), "data/school.sqlite")
+if (dbExistsTable(con, "student_marks")) {
 
+  backup_name <- paste0("student_marks_old_", format(Sys.time(), "%Y%m%d_%H%M%S"))
+  dbExecute(con, paste0("ALTER TABLE student_marks RENAME TO ", backup_name))
+}
 
+dbDisconnect(con)
 
+#Using the geom functions
+
+library(ggplot2)
+
+# geom_bar(): counts rows in each category
+
+ggplot(students, aes(x = class)) +
+  geom_bar(fill = "steelblue") +
+  labs(title = "Number of students per class", x = "Class", y = "Count")
+
+# geom_histogram(): shows how one numeric variable is distributed
+
+ggplot(students, aes(x = math)) +
+  geom_histogram(binwidth = 10, fill = "orange", color = "white") +
+  labs(title = "Distribution of math marks", x = "Math mark", y = "Number of students")
+
+# geom_boxplot(): compares a number across groups
+
+ggplot(students, aes(x = class, y = math)) +
+  geom_boxplot(fill = "lightgreen") +
+  labs(title = "Math marks by class", x = "Class", y = "Math mark")
+  
+# geom_density(): a smooth curve showing where the math marks are concentrated
+
+ggplot(students, aes(x = math)) +                       
+  geom_density(fill = "skyblue", alpha = 0.5) +         
+  labs(title = "Density of math marks", x = "Math mark", y = "Density")
+
+# geom_rug(): adds a small tick on the axis for every student
+
+ggplot(students, aes(x = math)) +
+  geom_density(fill = "skyblue", alpha = 0.5) +         
+  geom_rug(color = "darkblue") +                        
+  labs(title = "Density of math marks with rug", x = "Math mark", y = "Density")
+
+# geom_violin(): a density curve turned sideways and mirrored, one per class
+
+ggplot(students, aes(x = class, y = math)) +
+  geom_violin(fill = "plum") +                          
+  labs(title = "Math marks by class (violin)", x = "Class", y = "Math mark")
+
+# geom_jitter(): the actual points, shifted slightly so they don't overlap
+
+ggplot(students, aes(x = class, y = math)) +
+  geom_boxplot(fill = "lightgreen", outlier.shape = NA) +   # box without extra outlier dots
+  geom_jitter(width = 0.15, height = 0, color = "darkred") +  # one dot per student
+  labs(title = "Math marks by class with individual students", x = "Class", y = "Math mark")
+  
+# geom_point() & geom_smooth(): Scatter plot with a trendline comparing math vs english
+ggplot(students, aes(x = math, y = english)) +
+  geom_point(color = "blue", size = 3) +
+  geom_smooth(method = "lm", col = "red", se = FALSE) +
+  labs(title = "Math vs English Marks with Trendline", x = "Math Mark", y = "English Mark")
+
+# geom_line(): Line plot showing math marks sequentially by student ID
+ggplot(students, aes(x = student_id, y = math)) +
+  geom_line(color = "maroon", linewidth = 1) +
+  geom_point(color = "purple", size = 2) +
+  labs(title = "Math Marks Progression Across Students", x = "Student ID", y = "Math Mark")
+
+# geom_text(): Scatter plot with student names labeled next to their points
+ggplot(students, aes(x = math, y = science, label = name)) +
+  geom_point(color = "darkgreen") +
+  geom_text(vjust = -0.5, size = 3) +
+  labs(title = "Math vs Science Marks Labeled by Student Name", x = "Math Mark", y = "Science Mark")
+
+# geom_hline() & geom_vline(): Adding reference lines (e.g., passing mark of 50)
+ggplot(students, aes(x = math, y = english)) +
+  geom_point(color = "darkblue", size = 3) +
+  geom_hline(yintercept = 50, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = 50, linetype = "dashed", color = "red") +
+  labs(title = "Marks with Passing Threshold Lines (50)", x = "Math Mark", y = "English Mark")
+
+#FOR THE APPLY FUNCTIONS/FAMILY USAGE
+
+# Extract just the numeric score columns for matrix/apply operations
+score_matrix <- as.matrix(students[, c("math", "english", "science")])
+score_df <- students[, c("math", "english", "science")]
+
+# apply(): Apply a function across margins (e.g., find mean score for each student/row -> margin 1)
+(row_means <- apply(score_matrix, 1, mean))
+
+# lapply(): Apply a function to a list/data frame, always returns a LIST
+(lapply_res <- lapply(score_df, mean))
+
+# sapply(): Simplified version of lapply, returns a VECTOR or matrix if possible
+(sapply_res <- sapply(score_df, mean))
+
+# vapply(): Like sapply, but you explicitly specify the expected return type for safety
+(vapply_res <- vapply(score_df, mean, FUN.VALUE = numeric(1)))
+
+# tapply(): Apply a function across subsets defined by a factor (e.g., mean math score BY class)
+(tapply_res <- tapply(students$math, students$class, mean))
+
+# mapply(): Multivariate apply (e.g., add math and english scores element-by-element)
+(mapply_res <- mapply(function(m, e) (m + e) / 2, students$math, students$english))
+
+# rapply(): Recursive apply for nested lists (we can wrap score_df into a list to demonstrate)
+nested_list <- list(scores = score_df)
+rapply_res <- rapply(nested_list, function(x) x + 2, classes = "numeric")
+head(rapply_res)  
+
+#The other question that asks to find a dataset which can fit multiple linear regression and it's interpretation
+
+# Fit the multiple linear regression model
+mlr_model <- lm(science ~ math + english, data = students)
+
+# View the regression summary and coefficients
+summary(mlr_model)
+
+#By Predicting a student's science score based on their math and english scores. Our regression equation is equal to science = 7.22+(1.36*math)-(0.45*english)
+
+#Math (+1.36, p < 0.001):Strong Positive Impact: Holding English constant, for every 1-point increase in a student's math mark, their science score increases by 1.36 points. 
+#This relationship is highly statistically significant.English (-0.45, p = 0.002):Statistical Suppression Effect: Holding Math constant, a 1-point increase in English corresponds to a $-0.45$ point change in science. In this specific dataset, this negative coefficient arises because Math and English scores overlap heavily in explaining Science variance (multicollinearity). It is statistically significant (p = 0.002).
+#Intercept (7.22, p = 0.065):Baseline Value: The theoretical starting science score if both Math and English were zero (serving as a mathematical anchor rather than a real-world student scenario
+
+#Multiple R-squared (0.9746):Exceptional Explanatory Power: 97.46% of the total variance in science scores is explained by the combination of math and english marks.
+
+#Adjusted R-squared (0.9704):Confirms that even after accounting for the number of predictors, the model remains robustly predictive (97.04%).
+
+#Overall F-statistic (p = 2.68* 10^(-10):Proves that the model as a whole is overwhelmingly significant compared to a model with no predictors.
+
+#THE LAST QUESTION ABOUT VARIABLE SELECTION METHODS
+
+#This is the process of choosing which predictor variables are we going to include in regression model to get the best balance between accuracy and simplicity whic avoids overfitting.
+
+#For instance:
+
+# Start with a full model and let R perform stepwise/backward elimination
+full_model <- lm(science ~ math + english, data = students)
+step_model <- step(full_model, direction = "backward")
+
+# View the summary of the optimized model selected
+summary(step_model)
+
+#END
 
 
 
