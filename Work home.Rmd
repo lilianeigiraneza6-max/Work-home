@@ -123,7 +123,7 @@ if (dbExistsTable(con, "student_marks")) {
 
 dbDisconnect(con)
 
-#THIS IS THE (2ND)SECOND ASSIGNMENT OF Using the geom functions
+# THIS IS THE (2ND)SECOND ASSIGNMENT OF Using the geom functions
 
 library(ggplot2)
 
@@ -196,7 +196,7 @@ ggplot(students, aes(x = math, y = english)) +
   geom_vline(xintercept = 50, linetype = "dashed", color = "red") +
   labs(title = "Marks with Passing Threshold Lines (50)", x = "Math Mark", y = "English Mark")
 
-#3RD ASSIGNMRNT IT'S FOR THE APPLY FUNCTIONS/FAMILY USAGE
+# 3RD ASSIGNMRNT IT'S FOR THE APPLY FUNCTIONS/FAMILY USAGE
 
 # Extract just the numeric score columns for matrix/apply operations
 score_matrix <- as.matrix(students[, c("math", "english", "science")])
@@ -225,7 +225,7 @@ nested_list <- list(scores = score_df)
 rapply_res <- rapply(nested_list, function(x) x + 2, classes = "numeric")
 head(rapply_res)  
 
-#The other question which is the last one(4th assignment) that asks to find a dataset which can fit multiple linear regression and it's interpretation
+# The other question which is the last one(4th assignment) that asks to find a dataset which can fit multiple linear regression and it's interpretation
 
 # Fit the multiple linear regression model
 mlr_model <- lm(science ~ math + english, data = students)
