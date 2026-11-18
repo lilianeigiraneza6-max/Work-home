@@ -19,16 +19,21 @@ When you click the **Knit** button a document will be generated that includes bo
 summary(cars)
 ```
 
+# This is the (1ST)first assignment of importing statistical packages
+
 install.packages("haven")
 install.packages("DBI")
 install.packages("RSQLite")
 install.packages("readr")
 
+#haven reads statistical package files like (SPSS, Stata, SAS), DBI is for the database and RSQLite is the translator for databases to make R understand it.
 
-library(haven)              #this reads statistical package files like (SPSS, Stata, SAS)
-library(DBI)               #and this is for the database
-library(RSQLite)          #this is the translator for SQLite databases to make R understand it
-library(readr)  
+library(haven)             
+library(DBI)               
+library(RSQLite)           
+library(readr) 
+
+#I first create the folder called 'data' to store our data and then make a table called 'students'
 
 dir.create("data")
 
@@ -46,11 +51,16 @@ science = c(72,70,95,48,84,55,68,91,62,58,97,73,80,41,79)
 head(students)
 tail(students)
 
-write.csv(students, "data/student_marks.csv", row.names = FALSE)   #am saving my csv sheet from R
+#am saving my csv sheet from R
+write.csv(students, "data/student_marks.csv", row.names = FALSE)   
 
-write_sav(students, "data/student_marks.sav") #and here am saving my spss data from R too
+#and here am saving my spss data from R too
+write_sav(students, "data/student_marks.sav") 
 
-write_dta(students, "data/student_marks.dta")  #That's for stata if u want stata data
+#That's for stata if whenever I want stata data
+write_dta(students, "data/student_marks.dta")  
+
+#Whenever I want to use sql commands I have first to connect it with R and after I will disconnect it to proceed with R codes
 
 con <- dbConnect(RSQLite::SQLite(), "data/school.sqlite")
 
@@ -113,7 +123,7 @@ if (dbExistsTable(con, "student_marks")) {
 
 dbDisconnect(con)
 
-#Using the geom functions
+#THIS IS THE (2ND)SECOND ASSIGNMENT OF Using the geom functions
 
 library(ggplot2)
 
@@ -186,7 +196,7 @@ ggplot(students, aes(x = math, y = english)) +
   geom_vline(xintercept = 50, linetype = "dashed", color = "red") +
   labs(title = "Marks with Passing Threshold Lines (50)", x = "Math Mark", y = "English Mark")
 
-#FOR THE APPLY FUNCTIONS/FAMILY USAGE
+#3RD ASSIGNMRNT IT'S FOR THE APPLY FUNCTIONS/FAMILY USAGE
 
 # Extract just the numeric score columns for matrix/apply operations
 score_matrix <- as.matrix(students[, c("math", "english", "science")])
@@ -215,7 +225,7 @@ nested_list <- list(scores = score_df)
 rapply_res <- rapply(nested_list, function(x) x + 2, classes = "numeric")
 head(rapply_res)  
 
-#The other question that asks to find a dataset which can fit multiple linear regression and it's interpretation
+#The other question which is the last one(4th assignment) that asks to find a dataset which can fit multiple linear regression and it's interpretation
 
 # Fit the multiple linear regression model
 mlr_model <- lm(science ~ math + english, data = students)
